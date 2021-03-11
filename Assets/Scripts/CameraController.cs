@@ -5,10 +5,10 @@ public class CameraController : MonoBehaviour {
 
 	public Transform target;
     public Vector3 offset;
-	public float sensitivity = 3; // чувствительность мышки
+	public float sensitivity = 10; // чувствительность мышки
 	public float limit = 80; // ограничение вращения по Y
 	public float zoom = 5f; // чувствительность при увеличении, колесиком мышки
-	public float zoomMax = 200; // макс. увеличение
+	public float zoomMax = 500; // макс. увеличение
 	public float zoomMin = 10; // мин. увеличение
 	private float X, Y = -15;
 

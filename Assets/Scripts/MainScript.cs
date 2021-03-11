@@ -72,6 +72,7 @@ public class MainScript : MonoBehaviour
             
             if (i == (seconds - ZeroTime))
             {            
+                //Latitude
                 if (table.Rows[str_num]["Latitude"].ToString() == String.Empty)
                 {
                     lat = 0;
@@ -80,6 +81,8 @@ public class MainScript : MonoBehaviour
                 {
                     lat = double.Parse(table.Rows[str_num]["Latitude"].ToString(), nfi);
                 }
+
+                //Longitude
                 if (table.Rows[str_num]["Longitude"].ToString() == String.Empty)
                 {
                     lon = 0;
@@ -88,30 +91,38 @@ public class MainScript : MonoBehaviour
                 {
                     lon = double.Parse(table.Rows[str_num]["Longitude"].ToString(), nfi);
                 }
+
+                //AltGPS
                 if (table.Rows[str_num]["AltGPS"].ToString() == String.Empty)
                 {
-                    AltGPS = 1.1f / 0.3048f;
+                    AltGPS = 0;
                 }
                 else
                 {
                     AltGPS = double.Parse(table.Rows[str_num]["AltGPS"].ToString(), nfi);
                 }
-                if (table.Rows[str_num]["TRK"].ToString() == String.Empty)
+
+                //HDG
+                if (table.Rows[str_num]["HDG"].ToString() == String.Empty)
                 {
                     HDG = 0;
                 }
                 else
                 {
-                    HDG = double.Parse(table.Rows[str_num]["TRK"].ToString(), nfi);
+                    HDG = double.Parse(table.Rows[str_num]["HDG"].ToString(), nfi);
                 }
+
+                //Roll
                 if (table.Rows[str_num]["Roll"].ToString() == String.Empty)
                 {
                     roll = 0;
                 }
                 else
                 {
-                    roll = double.Parse(table.Rows[str_num]["Roll"].ToString(), nfi);
+                    roll = -double.Parse(table.Rows[str_num]["Roll"].ToString(), nfi);
                 }
+
+                //Pitch
                 if (table.Rows[str_num]["Pitch"].ToString() == String.Empty)
                 {
                     pitch = 0;
@@ -126,6 +137,7 @@ public class MainScript : MonoBehaviour
             param[i] = new double[6] {lat, lon, AltGPS, HDG, roll, pitch};
         }
         DataHolder.started = true;
+
     }
 
     void Update()

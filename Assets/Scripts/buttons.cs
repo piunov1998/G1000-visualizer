@@ -9,7 +9,8 @@ using SimpleFileBrowser;
 public class buttons : MonoBehaviour
 {
     public DataTable dt = new DataTable();
-    public string[] lines;  
+    public string[] lines;
+    public string[] head;
 
     void Start()
     {
@@ -37,7 +38,8 @@ public class buttons : MonoBehaviour
                 string line = sr.ReadLine();
                 if (line.StartsWith("#"))
                 {
-                    GameObject.FindGameObjectWithTag("File Status").GetComponent<Text>().text += ("\n" + line);
+                    Array.Resize(ref head, head.Length + 1);
+                    head[head.Length -1] = line;
                 }
                 else
                 {
@@ -73,7 +75,7 @@ public class buttons : MonoBehaviour
 
         DataHolder.data = dt;
         DataHolder.Opened = true;
-
+        GameObject.FindGameObjectWithTag("File Status").GetComponent<Text>().text += "\n" + head[0];
     }
 
     public void OpenFile()
