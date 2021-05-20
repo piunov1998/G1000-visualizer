@@ -1,6 +1,4 @@
-﻿//using System.Collections;
-//using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using System;
 using UnityEngine.UI;
 
@@ -20,7 +18,7 @@ public class Plane : MonoBehaviour
             {
                 if ((row[0] != 0) && (row[1] != 0) && (row[2] != 0))
                 {
-                    ZeroPoint = new double[3] {row[0], row[2], row[1]};
+                    ZeroPoint = new double[3] {row[0], row[2], row[1]}; //ZeroPoint (lat, alt, lon)
                     GameObject.Find("Plane").transform.position = new Vector3(0, (float)(ZeroPoint[1] * 0.3048 - 1.1), 0);
                     transform.position = new Vector3(0, (float)(ZeroPoint[1] * 0.3048 - 1.1), 0);
                     return;
@@ -42,6 +40,8 @@ public class Plane : MonoBehaviour
                 GameObject.Find("TimeLine").GetComponent<Slider>().value = now_time;
             }
             
+            //Moving controll
+
             double lat = MainScript.param[(int)Math.Floor(now_time)][0];
             double lon = MainScript.param[(int)Math.Floor(now_time)][1];
             double alt = (double)(MainScript.param[(int)Math.Floor(now_time)][2]);
@@ -56,6 +56,8 @@ public class Plane : MonoBehaviour
             float next_roll = (float)MainScript.param[(int)Math.Floor(now_time + 1)][4];
             float next_pitch = (float)MainScript.param[(int)Math.Floor(now_time + 1)][5];
 
+            if (next_heading - heading > 180) next_heading = next_heading - 360;
+
             if (lat != 0)
             {
                 lat = lat - ZeroPoint[0];
@@ -67,8 +69,6 @@ public class Plane : MonoBehaviour
             if (alt < ZeroPoint[1] - 1.1) alt = ZeroPoint[1] - 1.1;
             if (next_alt < ZeroPoint[1] - 1.1) next_alt = ZeroPoint[1] - 1.1;
 
-            rotate.eulerAngles = new Vector3(roll, heading, pitch);
-
             Vector3 now_position = earth_calc(lat, alt, lon);
             Vector3 next_position = earth_calc(next_lat, next_alt, next_lon);
 
@@ -76,16 +76,24 @@ public class Plane : MonoBehaviour
             Vector3 next_rotation = new Vector3(next_roll, next_heading, next_pitch);
             
             transform.position = Vector3.Lerp(now_position, next_position, now_time - (int)Math.Floor(now_time));
-            transform.localEulerAngles = Vector3.Lerp(now_rotation, next_rotation, now_time - (int)Math.Floor(now_time));
+            transform.eulerAngles = Vector3.Lerp(now_rotation, next_rotation, now_time - (int)Math.Floor(now_time));
 
-            human_time.AddSeconds(Math.Floor(now_time)); 
+            
+            //Other
+            float IAS = (float)MainScript.param[(int)Math.Floor(now_time)][6];
+            float RPM = (float)MainScript.param[(int)Math.Floor(now_time)][7];
 
-            GameObject.Find("Params").GetComponent<Text>().text = ( "Time = " + human_time.ToShortTimeString() + "(" + Math.Floor(now_time) +
+            GameObject.Find("helice").transform.Rotate(-RPM/60, 0, 0);
+
+
+            //Info
+            GameObject.Find("Params").GetComponent<Text>().text = ( "Time = " + human_time.AddSeconds(now_time).ToLongTimeString() + "(" + Math.Floor(now_time) +
                                                                     ")\nLatitude = " + lat + 
                                                                     "\nLongitude = " + lon +
+                                                                    "\nIAS = " + IAS +
                                                                     "\nAlt = " + alt +
                                                                     "\nHDG = " + heading +
-                                                                    "\nVector = " + earth_calc(lat, alt, lon).ToString());
+                                                                    "\nRPM = " + RPM);
             GameObject.Find("Speed_ind").GetComponent<Text>().text = ("x" + Math.Floor(speed));
         }
     }
