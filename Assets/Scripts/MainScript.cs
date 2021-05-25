@@ -4,24 +4,24 @@ using UnityEngine.SceneManagement;
 using System.Data;
 using System;
 using System.Globalization;
+using System.Collections.Generic;
 
 public class MainScript : MonoBehaviour
 {
     public DataTable table;
     public static double[][] param;
-    public double lat;
-    public double lon;
-    public double AltGPS;
-    public double HDG;
-    public double roll;
-    public double pitch;
-    public double IAS;
-    public double RPM;
+    public double lat, lon;
+    public double AltGPS, AltBaro;
+    public double HDG, roll, pitch;
+    public double IAS, RPM;
     public int str_num = 0;
     public float MaxTime;
     public float ZeroTime;
 
     public GameObject HUD;
+
+    public float timer;
+    public static int[][] filtered_sectors;
 
     void Start()
     {
@@ -32,6 +32,8 @@ public class MainScript : MonoBehaviour
             Constructor();
             HUD.SetActive(true);
             GameObject.Find("TimeLine").GetComponent<Slider>().maxValue = (MaxTime - ZeroTime);
+            analysis();
+            marker();
         }
     }
 
@@ -40,7 +42,7 @@ public class MainScript : MonoBehaviour
         table = DataHolder.data;
         ZeroTime = TimeConv(table.Rows[0]["Lcl Time"].ToString());
         MaxTime = TimeConv(table.Rows[table.Rows.Count - 1]["Lcl Time"].ToString());
-        param = new double[(int)MaxTime][];
+        param = new double[(int)MaxTime - (int)ZeroTime][];
 
         NumberFormatInfo nfi = new CultureInfo( "en-US", false ).NumberFormat;
         nfi.NumberDecimalSeparator = ".";
@@ -51,28 +53,26 @@ public class MainScript : MonoBehaviour
         0 - Latitude
         1 - Longitude
         2 - AltGPS
-        3 - HDG
-        4 - roll
-        5 - pitch
-        6 - IAS
-        7 - RPM
+        3 - AltBaro
+        4 - HDG
+        5 - roll
+        6 - pitch
+        7 - IAS
+        8 - RPM
         */
         
         str_num = 0;
 
-        for (int i = 0; i < MaxTime; i++)
+        for (int i = 0; i < param.Length; i++)
         {
             if (str_num >= table.Rows.Count)
             {
                 str_num = table.Rows.Count - 1;
-                Debug.Log("Need to fix");
+                //Debug.Log("Need to fix");
             }
             float seconds = TimeConv(table.Rows[str_num]["Lcl Time"].ToString());
 
-            if (i > (seconds - ZeroTime))
-            {
-                str_num++;
-            }
+            if (i > (seconds - ZeroTime)) str_num++;
             
             if (i == (seconds - ZeroTime))
             {            
@@ -88,6 +88,10 @@ public class MainScript : MonoBehaviour
                 //AltGPS
                 if (table.Rows[str_num]["AltGPS"].ToString() == String.Empty) AltGPS = 0;
                 else AltGPS = double.Parse(table.Rows[str_num]["AltGPS"].ToString(), nfi);
+
+                //AltBaro
+                if (table.Rows[str_num]["AltB"].ToString() == String.Empty) AltBaro = 0;
+                else AltBaro = double.Parse(table.Rows[str_num]["AltB"].ToString(), nfi);
 
                 //HDG
                 if (table.Rows[str_num]["HDG"].ToString() == String.Empty) HDG = 0;
@@ -112,18 +116,77 @@ public class MainScript : MonoBehaviour
                 str_num++;
             }
             
-            param[i] = new double[8] {lat, lon, AltGPS, HDG, roll, pitch, IAS, RPM};
+            param[i] = new double[9] {lat, lon, AltGPS, AltBaro, HDG, roll, pitch, IAS, RPM};
         }
         DataHolder.started = true;
 
     }
 
+    void analysis()
+    {
+        List<int> data = new List<int>();
+        for (int i = 0; i < param.Length; i++)
+        {
+            if (param[i][7] > 20 && param[i][7] < 65) data.Add(i);
+        }
+        filtered_sectors = new int[256][];
+        int start_point = data[0];
+        int middle_point = data[0];
+        int k = 0;
+        for (int i = 0; i < data.Count; i++)
+        {
+            if (data[i] - middle_point > 5)
+            {
+                filtered_sectors[k] = new int[2] {start_point, data[i - 1]};
+                k++;
+                start_point = middle_point = data[i];
+            }
+            middle_point = data[i];
+        }
+        filtered_sectors[k] = new int[3] {0, 0, 0};
+    }
+
+    void marker()
+    {
+        GameObject time_slider = GameObject.Find("TimeLine");
+        float slider_scale = time_slider.GetComponent<RectTransform>().sizeDelta.x / time_slider.GetComponent<Slider>().maxValue;
+
+        for (int i = 0; i < filtered_sectors.Length; i++)
+        {
+            if (filtered_sectors[i].Length == 2)
+            {
+                GameObject sector = new GameObject("sector" + i.ToString(), typeof(Image));
+                sector.GetComponent<RectTransform>().sizeDelta = new Vector2((filtered_sectors[i][1] - filtered_sectors[i][0]) * slider_scale, 15);
+                sector.GetComponent<Image>().color = new Color(1, 0, 0, 0.8f);
+                sector.transform.SetParent(time_slider.transform);
+                sector.transform.localPosition = new Vector3((filtered_sectors[i][0] * slider_scale - time_slider.GetComponent<RectTransform>().sizeDelta.x / 2 + sector.GetComponent<RectTransform>().sizeDelta.x / 2), 0, 0);
+            }
+            else return;
+        }
+    }
+
     void Update()
     {
-        if(Input.GetKey(KeyCode.Escape))
+        if (DataHolder.started == true && timer > 5) GameObject.Find("Hint").GetComponent<Text>().enabled = false;
+        else timer += Time.deltaTime;
+        if(Input.GetKeyDown(KeyCode.Escape))
         {
             SceneManager.LoadScene("Menu");
             DataHolder.started = false;
+        }
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            
+            if (GameObject.Find("Pilot").GetComponent<Camera>().enabled == true) 
+            {
+                GameObject.Find("Pilot").GetComponent<Camera>().enabled = false;
+                GameObject.Find("Main Camera").GetComponent<Camera>().enabled = true;
+            }
+            else 
+            {
+                GameObject.Find("Pilot").GetComponent<Camera>().enabled = true;
+                GameObject.Find("Main Camera").GetComponent<Camera>().enabled = false;
+            }
         }
     }
 
