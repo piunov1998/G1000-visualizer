@@ -25,6 +25,7 @@ public class Plane : MonoBehaviour
                     terrain = GameObject.Find("Plane");
                     terrain.transform.position = new Vector3(0, (float)(ZeroPoint[1] * 0.3048 - 1.1), 0);
                     transform.position = new Vector3(0, (float)(ZeroPoint[1] * 0.3048), 0);
+                    runway_spawn();
                     return;
                 }
             }
@@ -140,14 +141,15 @@ public class Plane : MonoBehaviour
         return new Vector3((float)x, (float)y, (float)z);
     }
 
-    private Vector3 earth_calc(double lat, double alt, double lon)
+    public static Vector3 earth_calc(double lat, double alt, double lon)
     {
         double R = 6371000;
         double lat_m = 2 * Math.PI * R / 360 * lat;
         double lon_m = 2 * Math.PI * R / 360 * Math.Cos(ZeroPoint[0] + lat) * lon;
         double alt_m;
-        if (alt_ind() == 2) alt_m = alt * 0.3048;
-        else alt_m = (alt + ZeroPoint[1] - 1.1) * 0.3048;
+        // if (alt_ind() == 2) alt_m = alt * 0.3048;
+        // else alt_m = (alt + ZeroPoint[1] - 1.1) * 0.3048;
+        alt_m = alt * 0.3048;
 
         return new Vector3((float)lat_m, (float)alt_m, (float)lon_m);
     }
@@ -167,6 +169,35 @@ public class Plane : MonoBehaviour
             map = www.texture;
             terrain.transform.position = new Vector3(transform.position.x, terrain.transform.position.y, transform.position.z);
             terrain.GetComponent<Renderer>().material.mainTexture = map;
+        }
+    }
+
+    void runway_spawn()
+    {
+        float rw_alt, rw_heading, rw_long;
+        Vector2 rw_1, rw_2, rw_center;
+        for (int i = 0; i < MainScript.filtered_sectors.Length; i++)
+        {
+            if (MainScript.filtered_sectors[i].Length != 2) return;
+            rw_alt = ((float)MainScript.param[MainScript.filtered_sectors[i][0]][2] + (float)MainScript.param[MainScript.filtered_sectors[i][1]][2]) / 2;
+            //rw_heading = ((float)MainScript.param[MainScript.filtered_sectors[i][0]][4] + (float)MainScript.param[MainScript.filtered_sectors[i][1]][4]) / 2 + 12;
+            Vector3 vector = earth_calc((float)(MainScript.param[MainScript.filtered_sectors[i][0]][0] - ZeroPoint[0]), 0, (float)(MainScript.param[MainScript.filtered_sectors[i][0]][1]- ZeroPoint[2]));
+            rw_1 = new Vector2(vector.x, vector.z);
+            vector = earth_calc((float)(MainScript.param[MainScript.filtered_sectors[i][1]][0]- ZeroPoint[0]), 0, (float)(MainScript.param[MainScript.filtered_sectors[i][1]][1]- ZeroPoint[2]));
+            rw_2 = new Vector2(vector.x, vector.z);
+            rw_heading = Vector2.SignedAngle(rw_1, rw_2);
+
+            rw_heading = (float)(Math.Atan((rw_2.y - rw_1.y) / (rw_2.x - rw_1.x)) * 180 / Math.PI);
+            Debug.Log(rw_1.ToString() + "\n" + rw_2.ToString());
+
+            rw_long = Vector2.Distance(rw_1, rw_2);
+            rw_center = Vector2.Lerp(rw_1, rw_2, 0.5f);
+            GameObject runway = new GameObject("runway", typeof(MeshRenderer), typeof(MeshFilter));
+            runway.transform.position = new Vector3(rw_center.x, (float)(rw_alt * 0.3048), rw_center.y);
+            runway.transform.eulerAngles = new Vector3(0, rw_heading, 0);
+            runway.transform.localScale = new Vector3(rw_long / 2, 1, 15);
+            runway.GetComponent<MeshRenderer>().material.color = new Color(1, 1, 1, 1);
+            runway.GetComponent<MeshFilter>().mesh = terrain.GetComponent<MeshFilter>().mesh;
         }
     }
 }

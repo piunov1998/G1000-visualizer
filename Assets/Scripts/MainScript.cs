@@ -13,7 +13,7 @@ public class MainScript : MonoBehaviour
     public double lat, lon;
     public double AltGPS, AltBaro;
     public double HDG, roll, pitch;
-    public double IAS, RPM;
+    public double IAS, RPM, PWR, MagVar;
     public int str_num = 0;
     public float MaxTime;
     public float ZeroTime;
@@ -50,15 +50,17 @@ public class MainScript : MonoBehaviour
         /*
         Param array structure
         index - programm time
-        0 - Latitude
-        1 - Longitude
-        2 - AltGPS
-        3 - AltBaro
-        4 - HDG
-        5 - roll
-        6 - pitch
-        7 - IAS
-        8 - RPM
+        0  - Latitude
+        1  - Longitude
+        2  - AltGPS
+        3  - AltBaro
+        4  - HDG
+        5  - roll
+        6  - pitch
+        7  - IAS
+        8  - RPM
+        9  - PWR
+        10 - MagVar
         */
         
         str_num = 0;
@@ -113,10 +115,18 @@ public class MainScript : MonoBehaviour
                 if (table.Rows[str_num]["E1 RPM"].ToString() == String.Empty) RPM = 0;
                 else RPM = double.Parse(table.Rows[str_num]["E1 RPM"].ToString(), nfi);
 
+                //PWR
+                if (table.Rows[str_num]["E1 %Pwr"].ToString() == String.Empty) PWR = 0;
+                else PWR = double.Parse(table.Rows[str_num]["E1 %Pwr"].ToString(), nfi);
+
+                //MagVar
+                if (table.Rows[str_num]["MagVar"].ToString() == String.Empty) MagVar = 0;
+                else MagVar = double.Parse(table.Rows[str_num]["MagVar"].ToString(), nfi);
+
                 str_num++;
             }
             
-            param[i] = new double[9] {lat, lon, AltGPS, AltBaro, HDG, roll, pitch, IAS, RPM};
+            param[i] = new double[10] {lat, lon, AltGPS, AltBaro, HDG, roll, pitch, IAS, RPM, PWR};
         }
         DataHolder.started = true;
 
@@ -129,7 +139,7 @@ public class MainScript : MonoBehaviour
         {
             if (param[i][7] > 20 && param[i][7] < 65) data.Add(i);
         }
-        filtered_sectors = new int[256][];
+        filtered_sectors = new int[64][];
         int start_point = data[0];
         int middle_point = data[0];
         int k = 0;
@@ -164,6 +174,7 @@ public class MainScript : MonoBehaviour
             else return;
         }
     }
+
 
     void Update()
     {
