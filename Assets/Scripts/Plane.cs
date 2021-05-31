@@ -82,8 +82,9 @@ public class Plane : MonoBehaviour
                 next_lon = next_lon - ZeroPoint[2];
             }
 
-            if (alt < ZeroPoint[1]) alt = ZeroPoint[1];
-            if (next_alt < ZeroPoint[1]) next_alt = ZeroPoint[1];
+            //tmp del
+            //if (alt < ZeroPoint[1]) alt = ZeroPoint[1];
+            //if (next_alt < ZeroPoint[1]) next_alt = ZeroPoint[1];
 
             Vector3 now_position = earth_calc(lat, alt, lon);
             Vector3 next_position = earth_calc(next_lat, next_alt, next_lon);
@@ -180,16 +181,11 @@ public class Plane : MonoBehaviour
         {
             if (MainScript.filtered_sectors[i].Length != 2) return;
             rw_alt = ((float)MainScript.param[MainScript.filtered_sectors[i][0]][2] + (float)MainScript.param[MainScript.filtered_sectors[i][1]][2]) / 2;
-            //rw_heading = ((float)MainScript.param[MainScript.filtered_sectors[i][0]][4] + (float)MainScript.param[MainScript.filtered_sectors[i][1]][4]) / 2 + 12;
             Vector3 vector = earth_calc((float)(MainScript.param[MainScript.filtered_sectors[i][0]][0] - ZeroPoint[0]), 0, (float)(MainScript.param[MainScript.filtered_sectors[i][0]][1]- ZeroPoint[2]));
             rw_1 = new Vector2(vector.x, vector.z);
             vector = earth_calc((float)(MainScript.param[MainScript.filtered_sectors[i][1]][0]- ZeroPoint[0]), 0, (float)(MainScript.param[MainScript.filtered_sectors[i][1]][1]- ZeroPoint[2]));
             rw_2 = new Vector2(vector.x, vector.z);
-            rw_heading = Vector2.SignedAngle(rw_1, rw_2);
-
-            rw_heading = (float)(Math.Atan((rw_2.y - rw_1.y) / (rw_2.x - rw_1.x)) * 180 / Math.PI);
-            Debug.Log(rw_1.ToString() + "\n" + rw_2.ToString());
-
+            rw_heading = -(float)(Math.Atan((rw_2.y - rw_1.y) / (rw_2.x - rw_1.x)) * 180 / Math.PI);
             rw_long = Vector2.Distance(rw_1, rw_2);
             rw_center = Vector2.Lerp(rw_1, rw_2, 0.5f);
             GameObject runway = new GameObject("runway", typeof(MeshRenderer), typeof(MeshFilter));
