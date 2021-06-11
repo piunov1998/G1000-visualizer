@@ -137,7 +137,7 @@ public class MainScript : MonoBehaviour
         List<int> data = new List<int>();
         for (int i = 0; i < param.Length; i++)
         {
-            if (param[i][7] > 20 && param[i][7] < 65) data.Add(i);
+            if (param[i][7] > 20 && param[i][7] < 60) data.Add(i);
         }
         filtered_sectors = new int[64][];
         int start_point = data[0];

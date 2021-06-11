@@ -78,17 +78,17 @@ public class buttons : MonoBehaviour
         GameObject.FindGameObjectWithTag("File Status").GetComponent<Text>().text += "\n" + head[0];
     }
 
-    public void OpenFile()
+    public void OpenFile() //Функция кнопки Open (Открыть)
     {
         FileBrowser.ShowLoadDialog(onSuccess, onCancel, false, false, null, "Load", "Select");
     }
 
-    public void PlayPressed()
+    public void PlayPressed() //Функция кнопки Play (Проиграть)
     {
         SceneManager.LoadScene("FlyScene");
     }
 
-    public void ExitPressed()
+    public void ExitPressed() //Функция кнопки Exit (Выход)
     {
         UnityEngine.Application.Quit();
     }
