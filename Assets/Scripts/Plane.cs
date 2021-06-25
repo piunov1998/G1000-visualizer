@@ -108,7 +108,7 @@ public class Plane : MonoBehaviour
             GameObject.Find("Params").GetComponent<Text>().text = ("Time = " + human_time.AddSeconds(now_time).ToLongTimeString() +
             "/" + human_time.AddSeconds(MainScript.param.Length).ToLongTimeString() + " (" + Math.Floor(now_time) +
                                                                     ")\nIAS = " + IAS +
-                                                                    "\nAlt = " + alt +
+                                                                    "\nAlt = " + alt * 0.3048 +
                                                                     "\nHDG = " + heading +
                                                                     "\nRPM = " + RPM +
                                                                     "\nAlt sourse: " + alt_sourse);
@@ -182,7 +182,7 @@ public class Plane : MonoBehaviour
         {
             spawn = true;
             if (MainScript.filtered_sectors[i].Length != 2) return;
-            rw_alt = ((float)MainScript.param[MainScript.filtered_sectors[i][0]][2] + (float)MainScript.param[MainScript.filtered_sectors[i][1]][2]) / 2;
+            rw_alt = Math.Min((float)MainScript.param[MainScript.filtered_sectors[i][0]][2], (float)MainScript.param[MainScript.filtered_sectors[i][1]][2]);
             Vector3 vector = earth_calc((float)(MainScript.param[MainScript.filtered_sectors[i][0]][0] - ZeroPoint[0]), 0, (float)(MainScript.param[MainScript.filtered_sectors[i][0]][1]- ZeroPoint[2]));
             rw_1 = new Vector2(vector.x, vector.z);
             vector = earth_calc((float)(MainScript.param[MainScript.filtered_sectors[i][1]][0]- ZeroPoint[0]), 0, (float)(MainScript.param[MainScript.filtered_sectors[i][1]][1]- ZeroPoint[2]));
@@ -190,17 +190,21 @@ public class Plane : MonoBehaviour
             rw_heading = -(float)(Math.Atan((rw_2.y - rw_1.y) / (rw_2.x - rw_1.x)) * 180 / Math.PI);
             rw_long = Vector2.Distance(rw_1, rw_2);
             rw_center = Vector2.Lerp(rw_1, rw_2, 0.5f);
-            foreach (Vector2 coords in rw_coords)
+            float rw_delta_alt = Math.Abs((float)MainScript.param[MainScript.filtered_sectors[i][0]][2] - (float)MainScript.param[MainScript.filtered_sectors[i][1]][2]);
+            if (i != 0)
             {
-                if (Vector2.Distance(coords, rw_center) < 1000) spawn = false;
+                foreach (Vector2 coords in rw_coords)
+                {
+                    if (Vector2.Distance(coords, rw_center) < 800) spawn = false;
+                }
             }
             if (spawn == true)
             {    
                 rw_coords[i] = rw_center;
                 GameObject runway = new GameObject("runway" + i.ToString(), typeof(MeshRenderer), typeof(MeshFilter));
                 runway.transform.position = new Vector3(rw_center.x, (float)(rw_alt * 0.3048), rw_center.y);
-                runway.transform.eulerAngles = new Vector3(0, rw_heading, 0);
-                runway.transform.localScale = new Vector3(rw_long / 2, 1, 15);
+                runway.transform.eulerAngles = new Vector3(0, rw_heading, 0); //(float)(Math.Atan(rw_delta_alt / rw_long) * 180 / Math.PI));
+                runway.transform.localScale = new Vector3(rw_long / 2, 1, 7);
                 runway.GetComponent<MeshFilter>().mesh = terrain.GetComponent<MeshFilter>().mesh;
                 runway.GetComponent<MeshRenderer>().material = Resources.Load("Materials/asphalt", typeof(Material)) as Material;
             }

@@ -145,7 +145,7 @@ public class MainScript : MonoBehaviour
         int k = 0;
         for (int i = 0; i < data.Count; i++)
         {
-            if (data[i] - middle_point > 5)
+            if (data[i] - middle_point > 2)
             {
                 filtered_sectors[k] = new int[2] {start_point, data[i - 1]};
                 k++;
